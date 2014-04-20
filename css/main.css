@@ -1,0 +1,86 @@
+.container {
+    position: relative;
+    border: 1px solid #0d4F95;
+    width: 800px;
+    height: 600px;
+}
+
+canvas {
+    position: absolute;
+}
+#layer_1 {
+    z-index: 1;
+}
+#layer_2 {
+    z-index: 2;
+}
+#layer_3 {
+    z-index: 3;
+    /*width: 1600px !important;
+    height: 1200px !important;*/
+}
+#layer_4 {
+    z-index: 4;
+}
+
+.dn {
+    display: none;
+}
+
+/* DHTML popups vor company values */
+.dhtml_popup {
+    position: absolute;
+    width: 400px;
+    z-index: 1000;
+}
+.dhtml_popup .hd .c,
+.dhtml_popup .ft .c {
+    height: 10px;
+}
+.dhtml_popup .hd {
+    background: url('../images/rounded_popup/top_left_400.png') no-repeat 0px 0px;
+}
+.dhtml_popup .hd .c {
+    background: url('../images/rounded_popup/top_right.png') no-repeat right 0px;
+}
+.dhtml_popup .bd {
+    background: url('../images/rounded_popup/middle_left.png') repeat-y 0px 0px;
+}
+.dhtml_popup .bd .c {
+    background: url('../images/rounded_popup/middle_right.png') repeat-y right 0px;
+}
+.dhtml_popup .bd .c .s {
+    margin: 0px 1px 0px 5px;
+    background: #fff;
+    padding: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    line-height: 170%;
+}
+.dhtml_popup .bd .c .s .image {
+    margin: 5px 20px 5px 0;
+    float: left;
+    width: 171px;
+}
+.dhtml_popup .bd .c .s p {
+    margin: 0;
+}
+#value_4 p,
+#value_5 p {
+    height: 120px;
+}
+#value_6 p {
+    height: 240px;
+}
+.dhtml_popup .ft {
+    background: url('../images/rounded_popup/bottom_left_400.png') no-repeat 0px 0px;
+}
+.dhtml_popup .ft .c {
+    background: url('../images/rounded_popup/bottom_right.png') no-repeat right 0px;
+}
+.globe_image {
+    display: none !important;
+}
+.arrow_image {
+    display: none !important;
+}
