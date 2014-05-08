@@ -3,6 +3,12 @@
 function Analyzer(browsers) {
     this._browsers = browsers;
     this._documentTags = [];
+
+    this._navigators = {'ie': 5};
+
+    this._navigators['ie'] = 1;
+    this._navigators['ie'] = 1;
+    this._navigators['ie'] = 1;
 }
 
 Analyzer.prototype.collectDocumentTags = function(parent) {
@@ -191,9 +197,6 @@ VersionTags.prototype.isSupportFromThisVersion = function(tag) {
     return this._tags.indexOf(tag.toLowerCase()) !== -1;
 };
 
-
-
-
 (function() {
 
 
@@ -272,3 +275,25 @@ audio ie9, chrome5, ff9
 video ie8, chrome5, ff7
 
 */
+
+
+(function(w) {
+    w.htmlCompatibilityAnalyzer = w.htmlCompatibilityAnalyzer || {
+        browsers: [],
+        tags: []
+    };
+
+    //browser tags turėtų saugoti objektus iš tag'o ir jo palaikomų atributų su reikšmėmis. pvz
+
+    var attributeValuesIe7 = {attribute: 'type', values:['range', 'number']};
+    var attributeValuesIe8 = {attribute: 'type', values:['email']};
+    var attributesIe5 = {tag: 'input', attribute: ['type']};
+    var attributesIe7 = {tag: 'input', attributes:['placeholder']};
+    var attributesIe8 = {tag: 'input', attributes:['name']};
+    var tagsIe5 = ['input'];
+
+    var ie5Version =
+    var ie = new Browser('ie', ie7, ie8);
+
+
+})(window);
