@@ -2,12 +2,21 @@
 function Analyzer(browsers) {
     this._browsers = browsers;
     this._documentTags = [];
+    var _ignoredAttributesValues = ['class', 'src', 'id', 'width', 'height'];
 
     var collectDocumentTags = function(analyzer, parent) {
         parent = typeof parent !== 'undefined' ? parent : document.querySelector('body');
 
         if (parent.tagName !== 'undefined' && analyzer._documentTags.indexOf(parent.tagName.toLowerCase()) === -1) {
-            analyzer._documentTags.push(parent.tagName.toLowerCase());
+            var tag = analyzer._documentTags.filter(function(t) {return t._tag === parent.tagName.toLocaleLowerCase()});
+
+            if (tag.length === 0) {
+                tag = new Tag(parent.tagName.toLowerCase(), []);
+                collectTagAttributes(parent, tag);
+                analyzer._documentTags.push(tag);
+            } else {
+                collectTagAttributes(parent, tag[0]);
+            }
         }
 
         var children = parent.children;
@@ -15,6 +24,30 @@ function Analyzer(browsers) {
         if (children.length > 0) {
             for (var id = 0; id < children.length; id++) {
                 collectDocumentTags(analyzer, children[id]);
+            }
+        }
+    };
+
+    var collectTagAttributes = function(element, tag) {
+        var attributes = element.attributes;
+        for (var id = 0; id < attributes.length; id++) {
+            var name = attributes[id].nodeName.toLowerCase();
+            var existingAttribute = tag._attributes.filter(function (a) {return a._attribute === name});
+            var value = attributes[id].nodeValue.toLowerCase();
+            value = value !== '' && _ignoredAttributesValues.indexOf(name) == -1 ? value : '';
+
+            if (existingAttribute.length === 0) {
+                tag._attributes.push(new TagAttribute(name, value === '' ? [] : [new TagAttributeValue(value)]));
+            } else {
+                existingAttribute = existingAttribute[0];
+
+                if (value !== '') {
+                    var existingValue = existingAttribute._values.filter(function (v) {return v._value === value});
+
+                    if (existingValue.length === 0) {
+                        existingAttribute._values.push(new TagAttributeValue(value))
+                    }
+                }
             }
         }
     };
@@ -341,6 +374,36 @@ var TagAttributeValue = function(value, isNew) {
     //Analyzer initialization
     var htmlCompatibilityAnalyzer = new Analyzer([ie, firefox, chrome]);
 
+
+    var tags = htmlCompatibilityAnalyzer.getDocumentTags();
+    console.log('Tags found in document:\n');
+    for (var id = 0; id < tags.length; id++) {
+        var tag = tags[id];
+        var tagAttributes = [];
+
+        for (var attributeId = 0; attributeId < tag._attributes.length; attributeId++) {
+            var attribute = tag._attributes[attributeId];
+            var attributeInfo = '[' + attribute._attribute;
+
+            if (attribute._values.length > 0) {
+                var attributeValues = []
+
+                for (var valueId = 0; valueId < attribute._values.length; valueId++) {
+                    attributeValues.push(attribute._values[valueId]._value);
+                }
+
+                attributeInfo += ' = ' + attributeValues. join('|');
+            }
+
+            attributeInfo += ']';
+            tagAttributes.push(attributeInfo);
+        }
+
+        console.log(tag._tag, tagAttributes.join(','));
+    }
+
+
+
     console.log('ie name: ' + ie._name);
     console.log('is audio in ie9: ' + ie9.isSupportFromThisVersion('auDIO'));
     console.log('ie versions: ' +ie.getVersionsIdentifiers());
@@ -353,11 +416,9 @@ var TagAttributeValue = function(value, isNew) {
     console.log('your website can work in lowest version of IE (all tags):' + ie.getLowestSupportedVersionForAllTags(tags));
     console.log('your website can work in lowest version of IE (known tags only):' + ie.getLowestSupportedVersionForKnownTags(tags));
 
-    for (var tagId = 0 ; tagId < tags.length; tagId++) {
-        console.log(tags[tagId]);
-    }
-
     var browsersInfo = htmlCompatibilityAnalyzer.getBrowserSupportInfo();
+
+
 
     console.log('This page is available in these browsers:');
     for (var browserInfoId = 0; browserInfoId < browsersInfo.length; browserInfoId++) {
