@@ -62,13 +62,34 @@ function Analyzer(browsers) {
 
     this.getBrowserSupportInfo = function() {
         var tags = this.getDocumentTags();
+
         var supportedBrowsers = [];
 
         for (var id = 0; id < this._browsers.length; id++) {
             var name = this._browsers[id]._name;
-            var version = this._browsers[id].getLowestSupportedVersionForKnownTags(tags);
+            var tagsVersion = this._browsers[id].getLowestSupportedVersionForKnownTags(tags);
+            var attributesVersion = this._browsers[id].getLowestSupportedVersionForKnownAttributes(tags);
+            var valuesVersion = this._browsers[id].getLowestSupportedVersionForKnownValues(tags);
 
-            supportedBrowsers.push(new BrowserInfo(name, version));
+            var versions = this._browsers[id].getVersionsIdentifiers();
+            for (var versionId = versions.length - 1; versionId >= 0; versionId--) {
+                var version = null;
+                if (versions[versionId] === tagsVersion) {
+                    version = tagsVersion;
+                } else if (versions[versionId] === attributesVersion) {
+                    version = attributesVersion;
+                } else if (versions[versionId] === valuesVersion) {
+                    version = attributesVersion;
+                }
+
+                if (version != null) {
+                    supportedBrowsers.push(new BrowserInfo(name, version));
+                    break;
+                }
+
+            }
+
+
         }
 
         return supportedBrowsers;
@@ -83,7 +104,7 @@ function Analyzer(browsers) {
 
             for (var browserId = 0; browserId < this._browsers.length; browserId++) {
                 var name = this._browsers[browserId]._name;
-                var version = this._browsers[browserId].whenSupportAddedFor(tags[tagId]);
+                var version = this._browsers[browserId].whenSupportAddedForTag(tags[tagId]._tag.toLowerCase());
 
                 if (version !== '') {
                     tagInfo._browsersInfo.push(new BrowserInfo(name, version));
@@ -131,7 +152,7 @@ function Browser(name, versions) {
             var versionTags = this._versions[versionId]._tags;
 
             for (var tagId = 0; tagId < versionTags.length; tagId++) {
-                if (tags.indexOf(versionTags[tagId] === -1)) {
+                if (tags.indexOf(versionTags[tagId]._tag === -1)) {
                     tags.push(versionTags[tagId]); //TODO: fix to avoid duplicates
                 }
             }
@@ -140,19 +161,45 @@ function Browser(name, versions) {
         return tags;
     };
 
-    this.isTagSupported = function(tag) {
+    this.isTagSupported = function(tagName) {
         var tags = this.getTags();
 
-        return tags.indexOf(tag.toLowerCase()) !== -1;
+        return tags.indexOf(tagName.toLowerCase()) !== -1;
     };
 
-    this.whenSupportAddedFor = function(tag) {
+    this.whenSupportAddedForTag = function(tagName) {
         var version = '';
 
         for (var id = 0 ; id < this._versions.length; id++) {
-            if (this._versions[id].isSupportFromThisVersion(tag.toLowerCase())) {
+            if (this._versions[id].isTagSupportedFromThisVersion(tagName.toLowerCase())) {
                 version = this._versions[id]._identifier;
 
+                break;
+            }
+        }
+
+        return version;
+    };
+
+    this.whenSupportAddedForTagAttribute = function(tagName, attributeName) {
+        var version = '';
+
+        for (var id = 0 ; id < this._versions.length; id++) {
+            if (this._versions[id].isAttributeSupportedFromThisVersion(tagName.toLowerCase(), attributeName.toLowerCase())) {
+                version = this._versions[id]._identifier;
+                break;
+            }
+        }
+
+        return version;
+    };
+
+    this.whenSupportAddedForTagAttributeValue = function(tagName, attributeName, value) {
+        var version = '';
+
+        for (var id = 0 ; id < this._versions.length; id++) {
+            if (this._versions[id].isValueSupportedFromThisVersion(tagName.toLowerCase(), attributeName.toLowerCase(), value.toLowerCase())) {
+                version = this._versions[id]._identifier;
                 break;
             }
         }
@@ -165,7 +212,7 @@ function Browser(name, versions) {
         var lowestSupportedVersionId = 0;
 
         for (var id = 0; id < tags.length; id++) {
-            var supportedVersion = this.whenSupportAddedFor(tags[id].toLowerCase());
+            var supportedVersion = this.whenSupportAddedForTag(tags[id]._tag.toLowerCase());
 
             var supportedVersionId = versions.indexOf(supportedVersion);
 
@@ -186,12 +233,12 @@ function Browser(name, versions) {
         var lowestSupportedVersionId = 0;
 
         for (var id = 0; id < tags.length; id++) {
-            var tag = tags[id].toLowerCase();
+            var tagName = tags[id]._tag.toLowerCase();
 
 
-            if (this.isTagSupported(tag)) {
+            if (this.isTagSupported(tagName)) {
 
-                var supportedVersion = this.whenSupportAddedFor(tag);
+                var supportedVersion = this.whenSupportAddedForTag(tagName);
 
                 var supportedVersionId = versions.indexOf(supportedVersion);
 
@@ -203,21 +250,92 @@ function Browser(name, versions) {
 
         return versions[lowestSupportedVersionId];
     };
+
+    this.getLowestSupportedVersionForKnownAttributes = function (tags) {
+        var versions = this.getVersionsIdentifiers();
+        var lowestSupportedVersionId = 0;
+
+        for (var id = 0; id < tags.length; id++) {
+            var tag = tags[id];
+
+            for (var attributeId = 0; attributeId < tag._attributes.length; attributeId++) {
+                var supportedVersion = this.whenSupportAddedForTagAttribute(tag._tag.toLowerCase(), tag._attributes[attributeId]._attribute.toLowerCase());
+                var supportedVersionId = versions.indexOf(supportedVersion);
+
+                if (supportedVersionId > lowestSupportedVersionId) {
+                    lowestSupportedVersionId = supportedVersionId;
+                }
+            }
+        }
+
+        return versions[lowestSupportedVersionId];
+    };
+
+    this.getLowestSupportedVersionForKnownValues = function(tags) {
+        var versions = this.getVersionsIdentifiers();
+        var lowestSupportedVersionId = 0;
+
+        for (var id = 0; id < tags.length; id++) {
+            var tag = tags[id];
+
+            for (var attributeId = 0; attributeId < tag._attributes.length; attributeId++) {
+                var attribute = tag._attributes[attributeId];
+                for (var valueId = 0; valueId < attribute._values.length; valueId++) {
+                    var supportedVersion = this.whenSupportAddedForTagAttribute(tag._tag.toLowerCase(), attribute._attribute.toLowerCase(), attribute._values[valueId]._value.toLowerCase());
+                    var supportedVersionId = versions.indexOf(supportedVersion);
+
+                    if (supportedVersionId > lowestSupportedVersionId) {
+                        lowestSupportedVersionId = supportedVersionId;
+                    }
+                }
+            }
+        }
+
+        return versions[lowestSupportedVersionId];
+    }
 }
 
 
 //Version
 function BrowserVersion(identifier, tags) {
     this._identifier = identifier;
-    this._tags = [];
+    this._tags = tags;
 
     for (var id = 0; id < tags.length; id++) {
-        this._tags.push(tags[id]._tag.toLowerCase());
+        this._tags[id]._tag = this._tags[id]._tag.toLowerCase();
     }
 
-    this.isSupportFromThisVersion = function(tag) {
-        return this._tags.indexOf(tag.toLowerCase()) !== -1;
+    this.isTagSupportedFromThisVersion = function(tagName) {
+        return this._tags.filter(function(t){return t._tag.toLowerCase() === tagName.toLowerCase()}).length > 0;
     };
+
+    this.isAttributeSupportedFromThisVersion = function(tagName, attributeName) {
+        var isSupported = false;
+        var tags = this._tags.filter(function(t){return t._tag.toLowerCase() === tagName.toLowerCase()});
+
+        for (var id = 0; id < tags.length && !isSupported; id++) {
+            var existingAttribute = this._tags[id]._attributes.filter(function(a) {return a._attribute.toLowerCase() === attributeName.toLowerCase()});
+            isSupported = existingAttribute.length > 0;
+        }
+
+        return isSupported;
+    }
+    
+    this.isValueSupportedFromThisVersion = function (tagName, attributeName, value) {
+        var isSupported = false;
+        var tags = this._tags.filter(function(t){return t._tag.toLowerCase() === tagName.toLowerCase()});
+
+        for (var id = 0; id < tags.length && !isSupported; id++) {
+            var existingAttributes = tags[id]._attributes.filter(function(a) {return a._attribute.toLowerCase() === attributeName.toLowerCase()});
+
+            for (var attributeId = 0; attributeId < existingAttributes.length && !isSupported; attributeId++) {
+                var existingValues = existingAttributes[attributeId]._values.filter(function(v) {return v._value.toLowerCase() === value.toLowerCase()});
+                isSupported = existingValues.length > 0;
+            }
+        }
+
+        return isSupported;
+    }
 }
 
 
@@ -291,7 +409,7 @@ var TagAttributeValue = function(value, isNew) {
     var firefox16 = new BrowserVersion('16.0', [progressTagFirefox16, meterTagFirefox16]);
 
     var anchorTagFirefox20 = new Tag('a', [new TagAttribute('download', [], true)], false);
-    var firefox20 = new BrowserVersion('20.0', anchorTagFirefox20);
+    var firefox20 = new BrowserVersion('20.0', [anchorTagFirefox20]);
 
     var videoTagFirefox21 = new Tag('video', [new TagAttribute('type', [new TagAttributeValue('video/mp4', true)], false)], false);
     var audioTagFirefox21 = new Tag('audio', [new TagAttribute('type', [new TagAttributeValue('audio/mpeg', true)], false)], false);
@@ -370,6 +488,7 @@ var TagAttributeValue = function(value, isNew) {
 
     var chrome = new Browser('Google Chrome', [chrome4, chrome5, chrome6, chrome7, chrome8, chrome10, chrome12, chrome14, chrome20, chrome26, chrome34]);
 
+    console.log(chrome20.isValueSupportedFromThisVersion('input', 'type', 'color'));
 
     //Analyzer initialization
     var htmlCompatibilityAnalyzer = new Analyzer([ie, firefox, chrome]);
@@ -403,18 +522,18 @@ var TagAttributeValue = function(value, isNew) {
     }
 
 
+/*
 
     console.log('ie name: ' + ie._name);
-    console.log('is audio in ie9: ' + ie9.isSupportFromThisVersion('auDIO'));
+    console.log('is audio in ie9: ' + ie9.isTagSupportedFromThisVersion('auDIO'));
     console.log('ie versions: ' +ie.getVersionsIdentifiers());
     console.log('ie tags: ' + ie.getTags());
-    console.log('when canvas supported in ie: ' + ie.whenSupportAddedFor('canvas'));
+    console.log('when canvas supported in ie: ' + ie.whenSupportAddedForTag('canvas'));
 
     //TODO: print where is the tag supported
-
-    var tags = htmlCompatibilityAnalyzer.getDocumentTags();
     console.log('your website can work in lowest version of IE (all tags):' + ie.getLowestSupportedVersionForAllTags(tags));
     console.log('your website can work in lowest version of IE (known tags only):' + ie.getLowestSupportedVersionForKnownTags(tags));
+*/
 
     var browsersInfo = htmlCompatibilityAnalyzer.getBrowserSupportInfo();
 
@@ -432,7 +551,7 @@ var TagAttributeValue = function(value, isNew) {
         for (var browserId = 0; browserId < tagsSupportInfo[id]._browsersInfo.length; browserId++) {
             browserInfo += tagsSupportInfo[id]._browsersInfo[browserId]._name + ' ' + tagsSupportInfo[id]._browsersInfo[browserId]._version + '|';
         }
-        console.log(tagsSupportInfo[id]._tag + ': ' + browserInfo);
+        console.log(tagsSupportInfo[id]._tag._tag + ': ' + browserInfo);
 
 
     }
