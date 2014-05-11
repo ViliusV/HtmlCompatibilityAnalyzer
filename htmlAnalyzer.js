@@ -369,6 +369,9 @@ var TagAttributeValue = function(value, isNew) {
 
 //Presenter
 var Presenter = function() {
+    var styleForHtmlEntityTitle = 'font-style: italic; color: #00bb00';
+    var styleForInfoSection = 'font-weight: 700; color: #0000bb';
+
     var createAnalyzer = function () {
         if (typeof analyzer !== 'undefined') {
             return analyzer;
@@ -497,9 +500,7 @@ var Presenter = function() {
         var chrome34 = new BrowserVersion('34.0', [imageTagChrome34]);
 
         var chrome = new Browser('Google Chrome', [chrome4, chrome5, chrome6, chrome7, chrome8, chrome10, chrome12, chrome14, chrome20, chrome26, chrome34]);
-
-        console.log(chrome20.isValueSupportedFromThisVersion('input', 'type', 'color'));
-
+        
         //Analyzer initialization
         return new Analyzer([ie, firefox, chrome]);
     };
@@ -508,7 +509,7 @@ var Presenter = function() {
 
     this.showHtmlEntitiesInDocument = function() {
         var tags = analyzer.getDocumentTags();
-        console.log('Tags found in document:\n');
+        console.log('%cTag[attribute=value] found in this page:', styleForInfoSection);
         for (var id = 0; id < tags.length; id++) {
             var tag = tags[id];
             var tagAttributes = [];
@@ -533,19 +534,25 @@ var Presenter = function() {
 
             console.log(tag._tag, tagAttributes.join(','));
         }
+
+        console.log('');
     };
 
     this.showHtmlPageSupportInfoByBrowsers = function () {
         var browsersInfo = analyzer.getBrowserSupportInfo();
-        console.log('This page is available in these browsers:');
+        console.log('%cThis page is available in these browsers:', styleForInfoSection);
         for (var browserInfoId = 0; browserInfoId < browsersInfo.length; browserInfoId++) {
             console.log(browsersInfo[browserInfoId]._name + ' ' + browsersInfo[browserInfoId]._version + '+');
         }
 
+        console.log('');
     };
 
     this.showHtmlEntitiesSupportInfo = function() {
         var tags = analyzer.getDocumentTags();
+
+        console.log('%cPage tags, attributes and values support by each browser:', styleForInfoSection)
+        console.log('%cTags:', styleForHtmlEntityTitle);
 
         for (var id = 0; id < tags.length; id++) {
             var tagSupportInfo = analyzer.getBrowserSupportInfoForTag(tags[id]);
@@ -554,10 +561,10 @@ var Presenter = function() {
             for (var tagBrowserId = 0; tagBrowserId < tagSupportInfo._browsersInfo.length; tagBrowserId++) {
                 tagBrowserInfo += tagSupportInfo._browsersInfo[tagBrowserId]._name + ' ' + tagSupportInfo._browsersInfo[tagBrowserId]._version + '|';
             }
-            console.log(tagSupportInfo._name + ':' +tagBrowserInfo, 'font-style:italic');
+            console.log(tagSupportInfo._name + ':' +tagBrowserInfo);
 
             if (tags[id]._attributes.length > 0) {
-                console.log('%c \tattributes:', 'font-style:italic; color:#d0d0d0');
+                console.log('%c \tAttributes:', styleForHtmlEntityTitle);
                 for (var attributeId = 0; attributeId < tags[id]._attributes.length; attributeId++) {
                     var attributeSupportInfo = analyzer.getBrowserSupportInfoForTagAttribute(tags[id], tags[id]._attributes[attributeId]);
                     var attributeBrowsersInfo = '|';
@@ -567,7 +574,7 @@ var Presenter = function() {
                     console.log('\t' + attributeSupportInfo._name + ':' + attributeBrowsersInfo);
 
                     if (tags[id]._attributes[attributeId]._values.length > 0) {
-                        console.log('%c \t\tvalues:', 'font-style:italic; color:#d0d0d0');
+                        console.log('%c \t\tValues:', styleForHtmlEntityTitle);
                         for (var valueId = 0; valueId < tags[id]._attributes[attributeId]._values.length; valueId++) {
                             var value = tags[id]._attributes[attributeId]._values[valueId];
                             var valueSupportInfo = analyzer.getBrowserSupportInfoForTagAttributeValue(tags[id], tags[id]._attributes[attributeId], value);
@@ -583,6 +590,8 @@ var Presenter = function() {
                 }
             }
         }
+
+        console.log('');
     }
 };
 
