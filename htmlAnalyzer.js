@@ -369,6 +369,7 @@ var TagAttributeValue = function(value, isNew) {
 
 //Presenter
 var Presenter = function() {
+    var isNavigatorSupportingStyling = navigator.userAgent.toLowerCase().indexOf('chrome') != -1;
     var styleForHtmlEntityTitle = 'font-style: italic; color: #00bb00';
     var styleForInfoSection = 'font-weight: 700; color: #0000bb';
 
@@ -500,7 +501,7 @@ var Presenter = function() {
         var chrome34 = new BrowserVersion('34.0', [imageTagChrome34]);
 
         var chrome = new Browser('Google Chrome', [chrome4, chrome5, chrome6, chrome7, chrome8, chrome10, chrome12, chrome14, chrome20, chrome26, chrome34]);
-        
+
         //Analyzer initialization
         return new Analyzer([ie, firefox, chrome]);
     };
@@ -509,7 +510,12 @@ var Presenter = function() {
 
     this.showHtmlEntitiesInDocument = function() {
         var tags = analyzer.getDocumentTags();
-        console.log('%cTag[attribute=value] found in this page:', styleForInfoSection);
+        if (isNavigatorSupportingStyling) {
+            console.log('%cTag[attribute=value] found in this page:', styleForInfoSection);
+        } else {
+            console.log('Tag[attribute=value] found in this page:');
+        }
+
         for (var id = 0; id < tags.length; id++) {
             var tag = tags[id];
             var tagAttributes = [];
@@ -525,14 +531,14 @@ var Presenter = function() {
                         attributeValues.push(attribute._values[valueId]._value);
                     }
 
-                    attributeInfo += ' = ' + attributeValues. join('|');
+                    attributeInfo += ' = ' + attributeValues. join(' | ');
                 }
 
                 attributeInfo += ']';
                 tagAttributes.push(attributeInfo);
             }
 
-            console.log(tag._tag, tagAttributes.join(','));
+            console.log(tag._tag, tagAttributes.join(', '));
         }
 
         console.log('');
@@ -540,7 +546,13 @@ var Presenter = function() {
 
     this.showHtmlPageSupportInfoByBrowsers = function () {
         var browsersInfo = analyzer.getBrowserSupportInfo();
-        console.log('%cThis page is available in these browsers:', styleForInfoSection);
+
+        if (isNavigatorSupportingStyling) {
+            console.log('%cThis page is available in these browsers:', styleForInfoSection);
+        } else {
+            console.log('This page is available in these browsers:');
+        }
+
         for (var browserInfoId = 0; browserInfoId < browsersInfo.length; browserInfoId++) {
             console.log(browsersInfo[browserInfoId]._name + ' ' + browsersInfo[browserInfoId]._version + '+');
         }
@@ -551,8 +563,13 @@ var Presenter = function() {
     this.showHtmlEntitiesSupportInfo = function() {
         var tags = analyzer.getDocumentTags();
 
-        console.log('%cPage tags, attributes and values support by each browser:', styleForInfoSection)
-        console.log('%cTags:', styleForHtmlEntityTitle);
+        if (isNavigatorSupportingStyling) {
+            console.log('%cPage tags, attributes and values support by each browser:', styleForInfoSection)
+            console.log('%cTags:', styleForHtmlEntityTitle);
+        } else {
+            console.log('Page tags, attributes and values support by each browser:')
+            console.log('Tags:');
+        }
 
         for (var id = 0; id < tags.length; id++) {
             var tagSupportInfo = analyzer.getBrowserSupportInfoForTag(tags[id]);
@@ -564,7 +581,12 @@ var Presenter = function() {
             console.log(tagSupportInfo._name + ':' +tagBrowserInfo);
 
             if (tags[id]._attributes.length > 0) {
-                console.log('%c \tAttributes:', styleForHtmlEntityTitle);
+                if (isNavigatorSupportingStyling) {
+                    console.log('%c\tAttributes:', styleForHtmlEntityTitle);
+                } else {
+                    console.log('\tAttributes:');
+                }
+
                 for (var attributeId = 0; attributeId < tags[id]._attributes.length; attributeId++) {
                     var attributeSupportInfo = analyzer.getBrowserSupportInfoForTagAttribute(tags[id], tags[id]._attributes[attributeId]);
                     var attributeBrowsersInfo = '|';
@@ -574,7 +596,12 @@ var Presenter = function() {
                     console.log('\t' + attributeSupportInfo._name + ':' + attributeBrowsersInfo);
 
                     if (tags[id]._attributes[attributeId]._values.length > 0) {
-                        console.log('%c \t\tValues:', styleForHtmlEntityTitle);
+                        if (isNavigatorSupportingStyling) {
+                            console.log('%c\t\tValues:', styleForHtmlEntityTitle);
+                        } else {
+                            console.log('\t\tValues:');
+                        }
+
                         for (var valueId = 0; valueId < tags[id]._attributes[attributeId]._values.length; valueId++) {
                             var value = tags[id]._attributes[attributeId]._values[valueId];
                             var valueSupportInfo = analyzer.getBrowserSupportInfoForTagAttributeValue(tags[id], tags[id]._attributes[attributeId], value);
