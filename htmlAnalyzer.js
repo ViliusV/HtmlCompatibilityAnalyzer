@@ -573,10 +573,10 @@ var Presenter = function() {
         var tags = analyzer.getDocumentTags();
 
         if (isNavigatorSupportingStyling) {
-            console.log('%cPage tags, attributes and values support by each browser:', styleForInfoSection)
+            console.log('%cPage tags, attributes and values support by each browser:', styleForInfoSection);
             console.log('%cTags:', styleForHtmlEntityTitle);
         } else {
-            console.log('Page tags, attributes and values support by each browser:')
+            console.log('Page tags, attributes and values support by each browser:');
             console.log('Tags:');
         }
 
