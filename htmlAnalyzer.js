@@ -2,7 +2,7 @@
 function Analyzer(browsers) {
     this._browsers = browsers;
     this._documentTags = [];
-    var _ignoredAttributesValues = ['class', 'src', 'id', 'width', 'height'];
+    var _ignoredAttributesValues = ['class', 'src', 'id', 'width', 'height', 'placeholder'];
 
     var collectDocumentTags = function(analyzer, parent) {
         parent = typeof parent !== 'undefined' ? parent : document.querySelector('body');
@@ -31,24 +31,27 @@ function Analyzer(browsers) {
     var collectTagAttributes = function(element, tag) {
         var attributes = element.attributes;
         for (var id = 0; id < attributes.length; id++) {
-            var name = attributes[id].nodeName.toLowerCase();
-            var existingAttribute = tag._attributes.filter(function (a) {return a._attribute === name});
-            var value = attributes[id].nodeValue.toLowerCase();
-            value = value !== '' && _ignoredAttributesValues.indexOf(name) == -1 ? value : '';
+            (function()
+            {
+                var name = attributes[id].nodeName.toLowerCase();
+                var existingAttribute = tag._attributes.filter(function (a) {return a._attribute === name});
+                var value = attributes[id].nodeValue.toLowerCase();
+                value = value !== '' && _ignoredAttributesValues.indexOf(name) == -1 ? value : '';
 
-            if (existingAttribute.length === 0) {
-                tag._attributes.push(new TagAttribute(name, value === '' ? [] : [new TagAttributeValue(value)]));
-            } else {
-                existingAttribute = existingAttribute[0];
+                if (existingAttribute.length === 0) {
+                    tag._attributes.push(new TagAttribute(name, value === '' ? [] : [new TagAttributeValue(value)]));
+                } else {
+                    existingAttribute = existingAttribute[0];
 
-                if (value !== '') {
-                    var existingValue = existingAttribute._values.filter(function (v) {return v._value === value});
+                    if (value !== '') {
+                        var existingValue = existingAttribute._values.filter(function (v) {return v._value === value});
 
-                    if (existingValue.length === 0) {
-                        existingAttribute._values.push(new TagAttributeValue(value))
+                        if (existingValue.length === 0) {
+                            existingAttribute._values.push(new TagAttributeValue(value))
+                        }
                     }
                 }
-            }
+            })();
         }
     };
 
@@ -168,15 +171,15 @@ function Browser(name, versions) {
         return versionsIdentifiers;
     };
 
-    this.getTags = function() {
+    var getTags = function(browser) {
         var tags = [];
 
-        for (var versionId = 0; versionId < this._versions.length; versionId++) {
-            var versionTags = this._versions[versionId]._tags;
+        for (var versionId = 0; versionId < browser._versions.length; versionId++) {
+            var versionTags = browser._versions[versionId]._tags;
 
             for (var tagId = 0; tagId < versionTags.length; tagId++) {
                 if (tags.indexOf(versionTags[tagId]._tag === -1)) {
-                    tags.push(versionTags[tagId]); //TODO: fix to avoid duplicates
+                    tags.push(versionTags[tagId]);
                 }
             }
         }
@@ -184,8 +187,8 @@ function Browser(name, versions) {
         return tags;
     };
 
-    this.isTagSupported = function(tagName) {
-        var tags = this.getTags();
+    var isTagSupported = function(browser, tagName) {
+        var tags = getTags(browser);
 
         return tags.indexOf(tagName.toLowerCase()) !== -1;
     };
@@ -238,7 +241,7 @@ function Browser(name, versions) {
             var tagName = tags[id]._tag.toLowerCase();
 
 
-            if (this.isTagSupported(tagName)) {
+            if (isTagSupported(this, tagName)) {
 
                 var supportedVersion = this.whenSupportAddedForTag(tagName);
 
@@ -316,7 +319,7 @@ function BrowserVersion(identifier, tags) {
         var tags = this._tags.filter(function(t){return t._tag.toLowerCase() === tagName.toLowerCase()});
 
         for (var id = 0; id < tags.length && !isSupported; id++) {
-            var existingAttribute = this._tags[id]._attributes.filter(function(a) {return a._attribute.toLowerCase() === attributeName.toLowerCase()});
+            var existingAttribute = tags[id]._attributes.filter(function(a) {return a._attribute.toLowerCase() === attributeName.toLowerCase()});
             isSupported = existingAttribute.length > 0;
         }
 
@@ -364,208 +367,231 @@ var TagAttributeValue = function(value, isNew) {
 };
 
 
+//Presenter
+var Presenter = function() {
+    var createAnalyzer = function () {
+        if (typeof analyzer !== 'undefined') {
+            return analyzer;
+        }
 
-(function() {
-    //Internet Explorer
-    var sectionTagIe9 = new Tag('section', [], true);
-    var articleTagIe9 = new Tag('article', [], true);
-    var asideTagIe9 = new Tag('aside', [], true);
-    var headerTagIe9 = new Tag('header', [], true);
-    var footerTagIe9 = new Tag('footer', [], true);
-    var canvasTagIe9 = new Tag('canvas', [], true);
-    var videoTagIe9 = new Tag('video', [new TagAttribute('type',  [new TagAttributeValue('video/mp4', true)], true)], true);
-    var audioTagIe9 = new Tag('audio', [new TagAttribute('type', [new TagAttributeValue('audio/mpeg', true)], true)], true);
-    var svgTagIe9 = new Tag('svg', [], true);
-    var ie9 = new BrowserVersion('9.0', [sectionTagIe9, articleTagIe9, asideTagIe9, headerTagIe9, footerTagIe9, canvasTagIe9, videoTagIe9, audioTagIe9, svgTagIe9]);
+        //Internet Explorer
+        var sectionTagIe9 = new Tag('section', [], true);
+        var articleTagIe9 = new Tag('article', [], true);
+        var asideTagIe9 = new Tag('aside', [], true);
+        var headerTagIe9 = new Tag('header', [], true);
+        var footerTagIe9 = new Tag('footer', [], true);
+        var canvasTagIe9 = new Tag('canvas', [], true);
+        var videoTagIe9 = new Tag('video', [new TagAttribute('type',  [new TagAttributeValue('video/mp4', true)], true)], true);
+        var audioTagIe9 = new Tag('audio', [new TagAttribute('type', [new TagAttributeValue('audio/mpeg', true)], true)], true);
+        var svgTagIe9 = new Tag('svg', [], true);
+        var ie9 = new BrowserVersion('9.0', [sectionTagIe9, articleTagIe9, asideTagIe9, headerTagIe9, footerTagIe9, canvasTagIe9, videoTagIe9, audioTagIe9, svgTagIe9]);
 
-    var inputTagIe10 = new Tag('input', [
-        new TagAttribute('type', [new TagAttributeValue('range', true), new TagAttributeValue ('number', true)]),
-        new TagAttribute('placeholder', [], true),
-        new TagAttribute('required', [], true)]);
-    var progressTagIe10 = new Tag('progress', [], true);
-    var datalistTagIe10 = new Tag('datalist', [], true);
-    var ie10 = new BrowserVersion('10.0', [inputTagIe10, progressTagIe10, datalistTagIe10]);
+        var inputTagIe10 = new Tag('input', [
+            new TagAttribute('type', [new TagAttributeValue('range', true), new TagAttributeValue ('number', true)], false),
+            new TagAttribute('placeholder', [], true),
+            new TagAttribute('required', [], true)]);
+        var progressTagIe10 = new Tag('progress', [], true);
+        var datalistTagIe10 = new Tag('datalist', [], true);
+        var ie10 = new BrowserVersion('10.0', [inputTagIe10, progressTagIe10, datalistTagIe10]);
 
-    var ie = new Browser('Microsoft Internet Explorer', [ie9, ie10]);
+        var ie = new Browser('Microsoft Internet Explorer', [ie9, ie10]);
 
-    //Mozilla Firefox
-    var canvasTagFirefox2 = new Tag('canvas', [], true);
-    var firefox2 = new BrowserVersion('2.0', [canvasTagFirefox2]);
+        //Mozilla Firefox
+        var canvasTagFirefox2 = new Tag('canvas', [], true);
+        var firefox2 = new BrowserVersion('2.0', [canvasTagFirefox2]);
 
-    var videoTagFirefox3_5 = new Tag('video', [new TagAttribute('type', [new TagAttributeValue('video/webm', true), new TagAttributeValue('video/ogg', true)], true)], true);
-    var audioTagFirefox3_5 = new Tag('audio', [new TagAttribute('type', [new TagAttributeValue('audio/ogg', true), new TagAttributeValue('audio/wav', true)], true)], true);
-    var firefox3_5 = new BrowserVersion('3.5', [videoTagFirefox3_5, audioTagFirefox3_5]);
+        var videoTagFirefox3_5 = new Tag('video', [new TagAttribute('type', [new TagAttributeValue('video/webm', true), new TagAttributeValue('video/ogg', true)], true)], true);
+        var audioTagFirefox3_5 = new Tag('audio', [new TagAttribute('type', [new TagAttributeValue('audio/ogg', true), new TagAttributeValue('audio/wav', true)], true)], true);
+        var firefox3_5 = new BrowserVersion('3.5', [videoTagFirefox3_5, audioTagFirefox3_5]);
 
-    var inputTagFirefox4 = new Tag('input', [new TagAttribute('placeholder',[], true), new TagAttribute('required', [], true)], false);
-    var sectionTagFirefox4 = new Tag('section', [], true);
-    var articleTagFirefox4 = new Tag('article', [], true);
-    var asideTagFirefox4 = new Tag('aside', [], true);
-    var headerTagFirefox4 = new Tag('header', [], true);
-    var footerTagFirefox4 = new Tag('footer', [], true);
-    var svgTagFirefox4 = new Tag('svg', [], true);
-    var datalistTagFirefox4 = new Tag('datalist', [], true);
-    var firefox4 = new BrowserVersion('4.0', [sectionTagFirefox4, articleTagFirefox4, asideTagFirefox4, headerTagFirefox4, footerTagFirefox4, svgTagFirefox4, inputTagFirefox4, datalistTagFirefox4]);
+        var inputTagFirefox4 =  new Tag('input', [new TagAttribute('placeholder', [], true), new TagAttribute('required', [], true)], false);
+        var sectionTagFirefox4 = new Tag('section', [], true);
+        var articleTagFirefox4 = new Tag('article', [], true);
+        var asideTagFirefox4 = new Tag('aside', [], true);
+        var headerTagFirefox4 = new Tag('header', [], true);
+        var footerTagFirefox4 = new Tag('footer', [], true);
+        var svgTagFirefox4 = new Tag('svg', [], true);
+        var datalistTagFirefox4 = new Tag('datalist', [], true);
+        var firefox4 = new BrowserVersion('4.0', [sectionTagFirefox4, articleTagFirefox4, asideTagFirefox4, headerTagFirefox4, footerTagFirefox4, svgTagFirefox4, inputTagFirefox4, datalistTagFirefox4]);
 
-    var progressTagFirefox16 = new Tag('progress', [], true);
-    var meterTagFirefox16 = new Tag('meter', [], true);
-    var firefox16 = new BrowserVersion('16.0', [progressTagFirefox16, meterTagFirefox16]);
+        var progressTagFirefox16 = new Tag('progress', [], true);
+        var meterTagFirefox16 = new Tag('meter', [], true);
+        var firefox16 = new BrowserVersion('16.0', [progressTagFirefox16, meterTagFirefox16]);
 
-    var anchorTagFirefox20 = new Tag('a', [new TagAttribute('download', [], true)], false);
-    var firefox20 = new BrowserVersion('20.0', [anchorTagFirefox20]);
+        var anchorTagFirefox20 = new Tag('a', [new TagAttribute('download', [], true)], false);
+        var firefox20 = new BrowserVersion('20.0', [anchorTagFirefox20]);
 
-    var videoTagFirefox21 = new Tag('video', [new TagAttribute('type', [new TagAttributeValue('video/mp4', true)], false)], false);
-    var audioTagFirefox21 = new Tag('audio', [new TagAttribute('type', [new TagAttributeValue('audio/mpeg', true)], false)], false);
-    var firefox21 = new BrowserVersion('21.0', [videoTagFirefox21, audioTagFirefox21]);
+        var videoTagFirefox21 = new Tag('video', [new TagAttribute('type', [new TagAttributeValue('video/mp4', true)], false)], false);
+        var audioTagFirefox21 = new Tag('audio', [new TagAttribute('type', [new TagAttributeValue('audio/mpeg', true)], false)], false);
+        var firefox21 = new BrowserVersion('21.0', [videoTagFirefox21, audioTagFirefox21]);
 
-    var templateTagFirefox22 = new Tag('template', [], true);
-    var firefox22 = new BrowserVersion('22.0', [templateTagFirefox22]);
+        var templateTagFirefox22 = new Tag('template', [], true);
+        var firefox22 = new BrowserVersion('22.0', [templateTagFirefox22]);
 
-    var inputTagFirefox23 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('range', true)], false)], false);
-    var firefox23 = new BrowserVersion('23.0', [inputTagFirefox23]);
+        var inputTagFirefox23 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('range', true)], false)], false);
+        var firefox23 = new BrowserVersion('23.0', [inputTagFirefox23]);
 
-    var inputTagFirefox29 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('number', true), new TagAttributeValue('color', true)], false)], false);
-    var firefox29 = new BrowserVersion('29.0', [inputTagFirefox29]);
+        var inputTagFirefox29 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('number', true), new TagAttributeValue('color', true)], false)], false);
+        var firefox29 = new BrowserVersion('29.0', [inputTagFirefox29]);
 
-    var firefox = new Browser('Mozilla Firefox', [firefox2, firefox3_5, firefox4, firefox16, firefox20, firefox21, firefox22, firefox23, firefox29]);
-
-
-    //Google Chrome
-    var canvasTagChrome4 = new Tag('canvas', [], true);
-    var videoTagChrome4 = new Tag('video', [
-            new TagAttribute(
-                'type',[
-                    new TagAttributeValue('video/mp4', true),
-                    new TagAttributeValue('video/webm', true),
-                    new TagAttributeValue('video/ogg', true)],
-                true)],
-        true);
-    var audioTagChrome4 = new Tag('audio', [
-            new TagAttribute(
-                'type',[
-                    new TagAttributeValue('audio/mpeg', true),
-                    new TagAttributeValue('audio/ogg', true),
-                    new TagAttributeValue('audio/wav', true)],
-                true)],
-        true);
-    var inputTagChrome4 = new Tag('input', [new TagAttribute('placeholder',[], true)], false);
-    var chrome4 = new BrowserVersion('4.0', [canvasTagChrome4, videoTagChrome4, audioTagChrome4, inputTagChrome4]);
-
-    var inputTagChrome5 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('range', true)], false)], false);
-    var chrome5 = new BrowserVersion('5.0', [inputTagChrome5]);
-
-    var sectionTagChrome6 = new Tag('section', [], true);
-    var articleTagChrome6 = new Tag('article', [], true);
-    var asideTagChrome6 = new Tag('aside', [], true);
-    var headerTagChrome6 = new Tag('header', [], true);
-    var footerTagChrome6 = new Tag('footer', [], true);
-    var chrome6 = new BrowserVersion('6.0', [sectionTagChrome6, articleTagChrome6, asideTagChrome6, headerTagChrome6, footerTagChrome6]);
-
-    var svgTagChrome7 = new Tag('svg', [], true);
-    var inputTagChrome7 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('number', true)], false)], false);
-    var chrome7 = new BrowserVersion('7.0', [svgTagChrome7, inputTagChrome7]);
-
-    var progressTagChrome8 = new Tag('progress', [], true);
-    var meterTagChrome8 = new Tag('meter', [], true);
-    var chrome8 = new BrowserVersion('8.0', [progressTagChrome8, meterTagChrome8]);
-
-    var inputTagChrome10 = new Tag('input', [new TagAttribute('required', [], true)], false);
-    var chrome10 = new BrowserVersion('10.0', [inputTagChrome10]);
-
-    var detailsTagChrome12 = new Tag('details', [], true);
-    var summaryTagChrome12 = new Tag('summary', [], true);
-    var chrome12 = new BrowserVersion('12.0', [detailsTagChrome12, summaryTagChrome12]);
-
-    var anchorTagChrome14 = new Tag('a', [new TagAttribute('download', [], true)], false);
-    var chrome14 = new BrowserVersion('14.0', [anchorTagChrome14]);
-
-    var datalistTagChrome20 = new Tag('datalist', [], true);
-    var inputTagChrome20 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('color', true)], false)], false);
-    var chrome20 = new BrowserVersion('20.0', [datalistTagChrome20, inputTagChrome20]);
-
-    var templateTagChrome26 = new Tag('template', [], true);
-    var chrome26 = new BrowserVersion('26.0', [templateTagChrome26]);
-
-    var imageTagChrome34 = new Tag('img', [new TagAttribute('srcset', [], true)], false);
-    var chrome34 = new BrowserVersion('34.0', [imageTagChrome34]);
-
-    var chrome = new Browser('Google Chrome', [chrome4, chrome5, chrome6, chrome7, chrome8, chrome10, chrome12, chrome14, chrome20, chrome26, chrome34]);
-
-    console.log(chrome20.isValueSupportedFromThisVersion('input', 'type', 'color'));
-
-    //Analyzer initialization
-    var htmlCompatibilityAnalyzer = new Analyzer([ie, firefox, chrome]);
+        var firefox = new Browser('Mozilla Firefox', [firefox2, firefox3_5, firefox4, firefox16, firefox20, firefox21, firefox22, firefox23, firefox29]);
 
 
-    var tags = htmlCompatibilityAnalyzer.getDocumentTags();
-    console.log('Tags found in document:\n');
-    for (var id = 0; id < tags.length; id++) {
-        var tag = tags[id];
-        var tagAttributes = [];
+        //Google Chrome
+        var canvasTagChrome4 = new Tag('canvas', [], true);
+        var videoTagChrome4 = new Tag('video', [
+                new TagAttribute(
+                    'type',[
+                        new TagAttributeValue('video/mp4', true),
+                        new TagAttributeValue('video/webm', true),
+                        new TagAttributeValue('video/ogg', true)],
+                    true)],
+            true);
+        var audioTagChrome4 = new Tag('audio', [
+                new TagAttribute(
+                    'type',[
+                        new TagAttributeValue('audio/mpeg', true),
+                        new TagAttributeValue('audio/ogg', true),
+                        new TagAttributeValue('audio/wav', true)],
+                    true)],
+            true);
+        var inputTagChrome4 = new Tag('input', [new TagAttribute('placeholder', [], true)], false);
+        var chrome4 = new BrowserVersion('4.0', [canvasTagChrome4, videoTagChrome4, audioTagChrome4, inputTagChrome4]);
 
-        for (var attributeId = 0; attributeId < tag._attributes.length; attributeId++) {
-            var attribute = tag._attributes[attributeId];
-            var attributeInfo = '[' + attribute._attribute;
+        var inputTagChrome5 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('range', true)], false)], false);
+        var chrome5 = new BrowserVersion('5.0', [inputTagChrome5]);
 
-            if (attribute._values.length > 0) {
-                var attributeValues = [];
+        var sectionTagChrome6 = new Tag('section', [], true);
+        var articleTagChrome6 = new Tag('article', [], true);
+        var asideTagChrome6 = new Tag('aside', [], true);
+        var headerTagChrome6 = new Tag('header', [], true);
+        var footerTagChrome6 = new Tag('footer', [], true);
+        var chrome6 = new BrowserVersion('6.0', [sectionTagChrome6, articleTagChrome6, asideTagChrome6, headerTagChrome6, footerTagChrome6]);
 
-                for (var valueId = 0; valueId < attribute._values.length; valueId++) {
-                    attributeValues.push(attribute._values[valueId]._value);
+        var svgTagChrome7 = new Tag('svg', [], true);
+        var inputTagChrome7 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('number', true)], false)], false);
+        var chrome7 = new BrowserVersion('7.0', [svgTagChrome7, inputTagChrome7]);
+
+        var progressTagChrome8 = new Tag('progress', [], true);
+        var meterTagChrome8 = new Tag('meter', [], true);
+        var chrome8 = new BrowserVersion('8.0', [progressTagChrome8, meterTagChrome8]);
+
+        var inputTagChrome10 = new Tag('input', [new TagAttribute('required', [], true)], false);
+        var chrome10 = new BrowserVersion('10.0', [inputTagChrome10]);
+
+        var detailsTagChrome12 = new Tag('details', [], true);
+        var summaryTagChrome12 = new Tag('summary', [], true);
+        var chrome12 = new BrowserVersion('12.0', [detailsTagChrome12, summaryTagChrome12]);
+
+        var anchorTagChrome14 = new Tag('a', [new TagAttribute('download', [], true)], false);
+        var chrome14 = new BrowserVersion('14.0', [anchorTagChrome14]);
+
+        var datalistTagChrome20 = new Tag('datalist', [], true);
+        var inputTagChrome20 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('color', true)], false)], false);
+        var chrome20 = new BrowserVersion('20.0', [datalistTagChrome20, inputTagChrome20]);
+
+        var templateTagChrome26 = new Tag('template', [], true);
+        var chrome26 = new BrowserVersion('26.0', [templateTagChrome26]);
+
+        var imageTagChrome34 = new Tag('img', [new TagAttribute('srcset', [], true)], false);
+        var chrome34 = new BrowserVersion('34.0', [imageTagChrome34]);
+
+        var chrome = new Browser('Google Chrome', [chrome4, chrome5, chrome6, chrome7, chrome8, chrome10, chrome12, chrome14, chrome20, chrome26, chrome34]);
+
+        console.log(chrome20.isValueSupportedFromThisVersion('input', 'type', 'color'));
+
+        //Analyzer initialization
+        return new Analyzer([ie, firefox, chrome]);
+    };
+
+    var analyzer = createAnalyzer();
+
+    this.showHtmlEntitiesInDocument = function() {
+        var tags = analyzer.getDocumentTags();
+        console.log('Tags found in document:\n');
+        for (var id = 0; id < tags.length; id++) {
+            var tag = tags[id];
+            var tagAttributes = [];
+
+            for (var attributeId = 0; attributeId < tag._attributes.length; attributeId++) {
+                var attribute = tag._attributes[attributeId];
+                var attributeInfo = '[' + attribute._attribute;
+
+                if (attribute._values.length > 0) {
+                    var attributeValues = [];
+
+                    for (var valueId = 0; valueId < attribute._values.length; valueId++) {
+                        attributeValues.push(attribute._values[valueId]._value);
+                    }
+
+                    attributeInfo += ' = ' + attributeValues. join('|');
                 }
 
-                attributeInfo += ' = ' + attributeValues. join('|');
+                attributeInfo += ']';
+                tagAttributes.push(attributeInfo);
             }
 
-            attributeInfo += ']';
-            tagAttributes.push(attributeInfo);
+            console.log(tag._tag, tagAttributes.join(','));
+        }
+    };
+
+    this.showHtmlPageSupportInfoByBrowsers = function () {
+        var browsersInfo = analyzer.getBrowserSupportInfo();
+        console.log('This page is available in these browsers:');
+        for (var browserInfoId = 0; browserInfoId < browsersInfo.length; browserInfoId++) {
+            console.log(browsersInfo[browserInfoId]._name + ' ' + browsersInfo[browserInfoId]._version + '+');
         }
 
-        console.log(tag._tag, tagAttributes.join(','));
-    }
+    };
 
-    var browsersInfo = htmlCompatibilityAnalyzer.getBrowserSupportInfo();
-    console.log('This page is available in these browsers:');
-    for (var browserInfoId = 0; browserInfoId < browsersInfo.length; browserInfoId++) {
-        console.log(browsersInfo[browserInfoId]._name + ' ' + browsersInfo[browserInfoId]._version + '+');
-    }
+    this.showHtmlEntitiesSupportInfo = function() {
+        var tags = analyzer.getDocumentTags();
 
+        for (var id = 0; id < tags.length; id++) {
+            var tagSupportInfo = analyzer.getBrowserSupportInfoForTag(tags[id]);
+            var tagBrowserInfo = '|';
 
-    for (var id = 0; id < tags.length; id++) {
-        var tagSupportInfo = htmlCompatibilityAnalyzer.getBrowserSupportInfoForTag(tags[id]);
-        var tagBrowserInfo = '|';
-        for (var browserId = 0; browserId < tagSupportInfo._browsersInfo.length; browserId++) {
-            tagBrowserInfo += tagSupportInfo._browsersInfo[browserId]._name + ' ' + tagSupportInfo._browsersInfo[browserId]._version + '|';
-        }
-        console.log(tagSupportInfo._name + ':' +tagBrowserInfo, 'font-style:italic');
-        if (tags[id]._attributes.length > 0) {
-            console.log('%c \tattributes:', 'font-style:italic; color:#d0d0d0');
+            for (var tagBrowserId = 0; tagBrowserId < tagSupportInfo._browsersInfo.length; tagBrowserId++) {
+                tagBrowserInfo += tagSupportInfo._browsersInfo[tagBrowserId]._name + ' ' + tagSupportInfo._browsersInfo[tagBrowserId]._version + '|';
+            }
+            console.log(tagSupportInfo._name + ':' +tagBrowserInfo, 'font-style:italic');
 
-            for (var attributeId = 0; attributeId < tags[id]._attributes.length; attributeId++) {
-                var attributeSupportInfo = htmlCompatibilityAnalyzer.getBrowserSupportInfoForTagAttribute(tags[id], tags[id]._attributes[attributeId]);
-                var attributeBrowsersInfo = '|';
-                for (var browserId = 0; browserId < attributeSupportInfo._browsersInfo.length; browserId++) {
-                    attributeBrowsersInfo += attributeSupportInfo._browsersInfo[browserId]._name + ' ' + attributeSupportInfo._browsersInfo[browserId]._version + '|';
-                }
+            if (tags[id]._attributes.length > 0) {
+                console.log('%c \tattributes:', 'font-style:italic; color:#d0d0d0');
+                for (var attributeId = 0; attributeId < tags[id]._attributes.length; attributeId++) {
+                    var attributeSupportInfo = analyzer.getBrowserSupportInfoForTagAttribute(tags[id], tags[id]._attributes[attributeId]);
+                    var attributeBrowsersInfo = '|';
+                    for (var attributeBrowserId = 0; attributeBrowserId < attributeSupportInfo._browsersInfo.length; attributeBrowserId++) {
+                        attributeBrowsersInfo += attributeSupportInfo._browsersInfo[attributeBrowserId]._name + ' ' + attributeSupportInfo._browsersInfo[attributeBrowserId]._version + '|';
+                    }
+                    console.log('\t' + attributeSupportInfo._name + ':' + attributeBrowsersInfo);
 
-                console.log('\t' + attributeSupportInfo._name + ':' + attributeBrowsersInfo);
+                    if (tags[id]._attributes[attributeId]._values.length > 0) {
+                        console.log('%c \t\tvalues:', 'font-style:italic; color:#d0d0d0');
+                        for (var valueId = 0; valueId < tags[id]._attributes[attributeId]._values.length; valueId++) {
+                            var value = tags[id]._attributes[attributeId]._values[valueId];
+                            var valueSupportInfo = analyzer.getBrowserSupportInfoForTagAttributeValue(tags[id], tags[id]._attributes[attributeId], value);
+                            var valueBrowsersInfo = valueSupportInfo._name + ': |';
 
-                if (tags[id]._attributes[attributeId]._values.length > 0) {
-                    console.log('%c \t\tvalues:', 'font-style:italic; color:#d0d0d0');
+                            for (var browserId = 0; browserId < valueSupportInfo._browsersInfo.length; browserId++) {
+                                valueBrowsersInfo += valueSupportInfo._browsersInfo[browserId]._name + ' ' + valueSupportInfo._browsersInfo[browserId]._version + '|';
+                            }
 
-                    for (var valueId = 0; valueId < tags[id]._attributes[attributeId]._values.length; valueId++) {
-                        var value = tags[id]._attributes[attributeId]._values[valueId];
-                        var valueSupportInfo = htmlCompatibilityAnalyzer.getBrowserSupportInfoForTagAttributeValue(tags[id], tags[id]._attributes[attributeId], value);
-                        var valueBrowsersInfo = valueSupportInfo._name + ': |';
-
-                        for (var browserId = 0; browserId < valueSupportInfo._browsersInfo.length; browserId++) {
-                            valueBrowsersInfo += valueSupportInfo._browsersInfo[browserId]._name + ' ' + valueSupportInfo._browsersInfo[browserId]._version + '|';
+                            console.log('\t\t' + valueBrowsersInfo);
                         }
-
-                        console.log('\t\t' + valueBrowsersInfo);
                     }
                 }
             }
         }
     }
+};
 
+
+
+(function() {
+    var htmlCompatibilityAnalyzerPresenter = new Presenter();
+
+    htmlCompatibilityAnalyzerPresenter.showHtmlEntitiesInDocument();
+    htmlCompatibilityAnalyzerPresenter.showHtmlPageSupportInfoByBrowsers();
+    htmlCompatibilityAnalyzerPresenter.showHtmlEntitiesSupportInfo()
 })();
