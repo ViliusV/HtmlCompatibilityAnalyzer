@@ -640,6 +640,6 @@ var Presenter = function() {
     var htmlCompatibilityAnalyzerPresenter = new Presenter();
 
     htmlCompatibilityAnalyzerPresenter.showHtmlEntitiesInDocument();
-    htmlCompatibilityAnalyzerPresenter.showHtmlPageSupportInfoByBrowsers();
     htmlCompatibilityAnalyzerPresenter.showHtmlEntitiesSupportInfo()
+    htmlCompatibilityAnalyzerPresenter.showHtmlPageSupportInfoByBrowsers();
 })();
