@@ -379,6 +379,9 @@ var Presenter = function() {
         }
 
         //Internet Explorer
+        var inputTagIe1 = new Tag('input', [new TagAttribute('type', [], true)], true);
+        var ie1 = new BrowserVersion('1.0', [inputTagIe1]);
+
         var sectionTagIe9 = new Tag('section', [], true);
         var articleTagIe9 = new Tag('article', [], true);
         var asideTagIe9 = new Tag('aside', [], true);
@@ -398,9 +401,12 @@ var Presenter = function() {
         var datalistTagIe10 = new Tag('datalist', [], true);
         var ie10 = new BrowserVersion('10.0', [inputTagIe10, progressTagIe10, datalistTagIe10]);
 
-        var ie = new Browser('Microsoft Internet Explorer', [ie9, ie10]);
+        var ie = new Browser('Microsoft Internet Explorer', [ie1, ie9, ie10]);
 
         //Mozilla Firefox
+        var inputTagIeFirefox1 = new Tag('input', [new TagAttribute('type', [], true)], true);
+        var firefox1 = new BrowserVersion('1.0', [inputTagIeFirefox1]);
+
         var canvasTagFirefox2 = new Tag('canvas', [], true);
         var firefox2 = new BrowserVersion('2.0', [canvasTagFirefox2]);
 
@@ -438,10 +444,13 @@ var Presenter = function() {
         var inputTagFirefox29 = new Tag('input', [new TagAttribute('type', [new TagAttributeValue('number', true), new TagAttributeValue('color', true)], false)], false);
         var firefox29 = new BrowserVersion('29.0', [inputTagFirefox29]);
 
-        var firefox = new Browser('Mozilla Firefox', [firefox2, firefox3_5, firefox4, firefox16, firefox20, firefox21, firefox22, firefox23, firefox29]);
+        var firefox = new Browser('Mozilla Firefox', [firefox1, firefox2, firefox3_5, firefox4, firefox16, firefox20, firefox21, firefox22, firefox23, firefox29]);
 
 
         //Google Chrome
+        var inputTagChrome1 = new Tag('input', [new TagAttribute('type', [], true)], true);
+        var chrome1 = new BrowserVersion('1.0', [inputTagChrome1]);
+
         var canvasTagChrome4 = new Tag('canvas', [], true);
         var videoTagChrome4 = new Tag('video', [
                 new TagAttribute(
@@ -500,7 +509,7 @@ var Presenter = function() {
         var imageTagChrome34 = new Tag('img', [new TagAttribute('srcset', [], true)], false);
         var chrome34 = new BrowserVersion('34.0', [imageTagChrome34]);
 
-        var chrome = new Browser('Google Chrome', [chrome4, chrome5, chrome6, chrome7, chrome8, chrome10, chrome12, chrome14, chrome20, chrome26, chrome34]);
+        var chrome = new Browser('Google Chrome', [chrome1, chrome4, chrome5, chrome6, chrome7, chrome8, chrome10, chrome12, chrome14, chrome20, chrome26, chrome34]);
 
         //Analyzer initialization
         return new Analyzer([ie, firefox, chrome]);
