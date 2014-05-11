@@ -380,7 +380,8 @@ var Presenter = function() {
 
         //Internet Explorer
         var inputTagIe1 = new Tag('input', [new TagAttribute('type', [], true)], true);
-        var ie1 = new BrowserVersion('1.0', [inputTagIe1]);
+        var bodyTagIe1 = new Tag('body', [], true);
+        var ie1 = new BrowserVersion('1.0', [inputTagIe1, bodyTagIe1]);
 
         var sectionTagIe9 = new Tag('section', [], true);
         var articleTagIe9 = new Tag('article', [], true);
@@ -405,7 +406,8 @@ var Presenter = function() {
 
         //Mozilla Firefox
         var inputTagIeFirefox1 = new Tag('input', [new TagAttribute('type', [], true)], true);
-        var firefox1 = new BrowserVersion('1.0', [inputTagIeFirefox1]);
+        var bodyTagFirefox1 = new Tag('body', [], true);
+        var firefox1 = new BrowserVersion('1.0', [inputTagIeFirefox1, bodyTagFirefox1]);
 
         var canvasTagFirefox2 = new Tag('canvas', [], true);
         var firefox2 = new BrowserVersion('2.0', [canvasTagFirefox2]);
@@ -449,7 +451,8 @@ var Presenter = function() {
 
         //Google Chrome
         var inputTagChrome1 = new Tag('input', [new TagAttribute('type', [], true)], true);
-        var chrome1 = new BrowserVersion('1.0', [inputTagChrome1]);
+        var bodyTagChrome1 = new Tag('body', [], true);
+        var chrome1 = new BrowserVersion('1.0', [inputTagChrome1, bodyTagChrome1]);
 
         var canvasTagChrome4 = new Tag('canvas', [], true);
         var videoTagChrome4 = new Tag('video', [
